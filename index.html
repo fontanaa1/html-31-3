@@ -97,24 +97,24 @@
         </h2>
 
         <!-- menu categoria inicio-->
-            <nav id="nav-categorias" class="overflow-x-auto whitespace-nowrap snap-x flex gap-2 mt-6 pb-1">
-                <div class="animate-pulse flex gap-2">
-                    <div class="h-8 w-20 bg-gray rounded-full"></div>
-                    <div class="h-8 w-20 bg-gray rounded-full"></div>
-                    <div class="h-8 w-20 bg-gray rounded-full"></div>
-                </div>
-
-            </nav>
-        <!--menu categoria fim-->       
-        <!--produto inicio-->
-            <div id="produtos-container" class="mt-8">
-                <div id="categorias-titulo" class="text-left text-dark font-extrabold text-[22px] mb-4">
-                    iniciando...
-                </div>
-                <div id="lista-produtos" class="grid grid-cols-2 gap-4">
-
-                </div>
+        <nav id="nav-categorias" class="overflow-x-auto whitespace-nowrap snap-x flex gap-2 mt-6 pb-1">
+            <div class="animate-pulse flex gap-2">
+                <div class="h-8 w-20 bg-gray rounded-full"></div>
+                <div class="h-8 w-20 bg-gray rounded-full"></div>
+                <div class="h-8 w-20 bg-gray rounded-full"></div>
             </div>
+
+        </nav>
+        <!--menu categoria fim-->
+        <!--produto inicio-->
+        <div id="produtos-container" class="mt-8">
+            <div id="categorias-titulo" class="text-left text-dark font-extrabold text-[22px] mb-4">
+                iniciando...
+            </div>
+            <div id="lista-produtos" class="grid grid-cols-2 gap-4">
+
+            </div>
+        </div>
         <!--produto fim-->
 
     </section>
@@ -135,21 +135,21 @@
                 if (categoriasData.length > 0) {
                     selecionarCategoria(categoriasData[0].id, categoriasData[0].nome);
                 }
-            }catch (error) {
+            } catch (error) {
                 console.error('Error ao carregar as categorias:', error);
                 navCategorias.innerHTML = '<p class="text-red-500">Erro ao carregar menu.</p>'
             }
         }
 
-        function renderizarBotoesCategorias(){
+        function renderizarBotoesCategorias() {
             navCategorias.innerHTML = '';
             categoriasData.forEach(cat => {
                 const btn = document.createElement('button')
-                    btn.className = `snap-start px-4 py-4 py-1 rounded-full font-bold text-sm transition-all duration-150 cursor-pointer flex-shrink-0 btn-cat`;
-                    btn.innerText = cat.nome;
-                    btn.onclick = () => selecionarCategoria(cat.id, cat.nome);
-                    btn.dataset.id = cat.id;
-                    navCategorias.appendChild(btn);
+                btn.className = `snap-start px-4 py-4 py-1 rounded-full font-bold text-sm transition-all duration-150 cursor-pointer flex-shrink-0 btn-cat`;
+                btn.innerText = cat.nome;
+                btn.onclick = () => selecionarCategoria(cat.id, cat.nome);
+                btn.dataset.id = cat.id;
+                navCategorias.appendChild(btn);
             });
         }
 
@@ -171,31 +171,71 @@
         }
 
 
-        async function carregarProdutos(categoriaId){
-            listaProdutos.innerHTML= `
+        async function carregarProdutos(categoriaId) {
+            listaProdutos.innerHTML = `
             <div class="col-span-2 py-10 flex justify-center">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
             `;
 
-            try{
+            try {
                 const response = await fetch(`${API_URL}/produtos?categoriaId=${categoriaId}`);
                 const produtos = await response.json();
                 renderizarProdutos(produtos);
-            }catch (error) {
+            } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
                 listaProdutos.innerHTML = '<p class= "col-span-2 text-red-500"> Erro ao carregar produtos.</p>';
             }
         }
 
+        function renderizarProdutos(produtos) {
+            listaProdutos.innerHTML = '';
 
+            if (produtos.length === 0) {
+                listaProdutos.innerHTML = '<p class="col-span-2 text-gray-500 py-10">Nenhum produto nesta categoria.</p>'
+                return;
+            }
+
+            produtos.forEach(p => {
+                const precoFormatado = p.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const imgSource = (p.imagem && p.imagem.startsWith('http'))
+                    ? p.imagem
+                    : `./img/${p.imagem || 'logo.png'}`;
+
+                const card = document.createElement('div');
+
+                card.className = "bg-white rounded-[20px] p-3 shadow-sm border border-gray-100 relative flex flex-col hover:shadow-md transition-shadow group";
+
+                card.innerHTML = `
+            <div class="absolute inset-0 z-0 cursor-pointer"
+                onclick="abrirModalDetalhes('${p.nome}', ${p.preco}, '${p.descricao || ''}', '${imgSource}', '${p.id}')">
+            </div>
+
+            <img src="${imgSource}" alt="${p.nome}"
+                class="w-full h-32 object-cover object-center rounded-lg mb-2 mt-2 transition-transform duration-300 drop-shadow-sm group-hover:scale-105 pointer-events-none relative z-10"
+                onerror="this.src='./img/logo.png'">
+
+            <div class="text-left w-full mt-auto relative z-10 pointer-events-none">
+                <h4 class="font-bold text-gray-800 text-sm leading-tight">${p.nome}</h4>
+                <p class="text-primary font-bold">${precoFormatado}</p>
+            </div>
+
+            <button onclick="adicionarItem('${p.id}','${p.nome}', ${p.preco})"
+                class="w-full bg-primary text-white py-2 rounded-xl text-xs font-bold mt-3 shadow-md hover:bg-red-700 active:scale-95 transition-all z-10 relative">
+                Adicionar
+            </button>
+        `;
+
+                listaProdutos.appendChild(card);
+            });
+        }
 
 
         carregarCategorias();
     </script>
 
     <!-- ================= FOOTER ================= -->
-   <footer class="mt-24 text-center py-12 px-4 text-[0.875rem] text-white bg-[#333333]">
+    <footer class="mt-24 text-center py-12 px-4 text-[0.875rem] text-white bg-[#333333]">
         <h3 class="text-lg font-bold mb-2">Haruy Sushi</h3>
         <p>📍 Rua Prof. Toledo, 500, centro - Sorocaba</p>
         <p>📞 Whatsapp: (15) 99833-5768</p>
@@ -217,10 +257,10 @@
                 class="absolute top-4 right-4 bg-white/80 backdrop-blur-md text-dark w-10 h-10 rounded-full flex justify-center items-center font-bold text-2xl shadow-sm z-10 hover:text-primary active:scale-90 transition-all">&times;</button>
 
             <!-- Imagem -->
-            <div class="w-full h-[280px] bg-gray-50 flex justify-center items-center p-8 relative">
-                <div class="absolute inset-0 bg-gradient-to-b from-gray-100 to-white opacity-50"></div>
+            <div class="w-full aspect-square overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 <img id="detalhes-img" src="" alt="Produto"
-                    class="w-full h-full object-contain drop-shadow-xl relative z-10 transition-transform duration-500 hover:scale-105">
+                    class="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105">
             </div>
 
             <!-- Infos -->
@@ -314,19 +354,19 @@
         const botoes = document.querySelectorAll('.btn-cat');
         const conteudos = document.querySelectorAll('.categoria-conteudo');
 
-        function mudarCategoria(cat){
+        function mudarCategoria(cat) {
             //mostra apenas a categoria seleconada
             conteudos.forEach(div => {
                 div.id === 'cat-' + cat
-                ? div.classList.remove('hidden')
-                : div.classList.add('hidden');
+                    ? div.classList.remove('hidden')
+                    : div.classList.add('hidden');
             });
             //atualiza estilo do botao ativo
             botoes.forEach(btn => {
                 if (btn.dataset.cat === cat) {
                     btn.classList.add('bg-primary', 'text-white');
                     btn.classList.remove('bg-[#ebebeb]', 'text-dark');
-                }else {
+                } else {
                     btn.classList.remove('bg-primary', 'text-white');
                     btn.classList.add('bg-[#ebebeb]', 'text-dark');
                 }
@@ -378,22 +418,22 @@
         const modalDetalhesContent = document.getElementById('detalhes-modal-content');
 
         //abre o modal com informações do produto clicado
-        function abrirModalDetalhes(nome, preco, desc, img, id){
+        function abrirModalDetalhes(nome, preco, desc, img, id) {
             if (navigator.vibrate) navigator.vibrate(40);
 
             document.getElementById('detalhes-nome').innerText = nome;
-            document.getElementById('detalhes-preco').innerText = preco.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            document.getElementById('detalhes-preco').innerText = preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('detalhes-desc').innerText = desc;
             document.getElementById('detalhes-img').src = img;
-            document.getElementById('detalhes-btn-add').onclick = function() {
+            document.getElementById('detalhes-btn-add').onclick = function () {
                 adicionarItem(id, nome, preco);
                 fecharModalDetalhes();
             }
             modalDetalhes.classList.remove('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 modalDetalhesContent.classList.remove('scale-95');
                 modalDetalhesContent.classList.add('scale-100');
-            }, 10);
+            });
         }
 
         //fecha o modal detalhes do produto
@@ -417,25 +457,24 @@
         const itensContainer = document.getElementById('carrinho-itens-container');
         const modalTotalSpan = document.getElementById('modal-carrinho-total');
         //verifica se o carrinho ja tem itens salvos no localstorage
-        function inicilarCarrinho() {
-            const carrinhoSalvo = localStorge.getItem('haruy_carrinho');
+        function inicializarCarrinho() {
+            const carrinhoSalvo = localStorage.getItem('haruy_carrinho');
             if (carrinhoSalvo) {
-                //se existir algo salvo converte de volta para array e atualiza o carrinho
                 carrinho = JSON.parse(carrinhoSalvo);
                 atualizarInterfaceCart();
             }
         }
-        
+
         //adicionar ao carrinho
-        function adicionarItem(id, nome, preco){
-            if (navigator.vibrate){
+        function adicionarItem(id, nome, preco) {
+            if (navigator.vibrate) {
                 navigator.vibrate(200);
             }
             const index = carrinho.findIndex(item => item.id === id);
 
             if (index !== -1) {
                 carrinho[index].quantidade += 1;
-            }else{
+            } else {
                 carrinho.push({
                     id: id,
                     nome: nome,
@@ -454,7 +493,7 @@
             }, 10);
         }
 
-        function fecharModalCarrinho(){
+        function fecharModalCarrinho() {
             modalContent.classList.add('translate-y-full', 'scale-95');
             setTimeout(() => {
                 modal.classList.add('opacity-0', 'pointer-events-none');
@@ -478,14 +517,14 @@
             if (index !== -1) {
                 if (carrinho[index].quantidade > 1) {
                     carrinho[index].quantidade -= 1;
-                }else {
+                } else {
                     carrinho.splice(index, 1);
                     if (carrinho.length === 0) {
                         fecharModalCarrinho();
                     }
                 }
                 atualizarCarrinho();
-                if(navigator.vibrate) navigator.vibrate(50);
+                if (navigator.vibrate) navigator.vibrate(50);
             }
         }
 
@@ -500,7 +539,7 @@
                 return;
             }
             const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
-            const totalFormatado = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            const totalFormatado = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             //formata para a moeda brasileira R$
             carrinhoTotalSpan.innerText = totalFormatado;
             modalTotalSpan.innerText = totalFormatado;
@@ -509,15 +548,15 @@
             //renderiza a lista de itens dentro do modal
             renderizarItensModal();
         }
-    
+
         //função para renderizar os itens do carrinho dentro do modal
         function renderizarItensModal() {
             if (!itensContainer) return;
             itensContainer.innerHTML = '';
             // para cada item no array, cria um HTML
             carrinho.forEach(item => {
-                const subTotal = (item.preco * item.quantidade).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-                const precoUnit = item.preco.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                const subTotal = (item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const precoUnit = item.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 const divItem = document.createElement('div');
                 divItem.className = 'flex justify-between items-center border-b p-4 mt-2';
 
@@ -572,7 +611,7 @@
                         atualizarCarrinho();
                     }
                 );
-            }else{
+            } else {
                 alert(`Pedido fechado com sucesso! \n(navegador sem suporte GPS)`);
                 carrinho = [];
                 fecharModalCarrinho();
